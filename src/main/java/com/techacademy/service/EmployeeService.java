@@ -71,7 +71,7 @@ public class EmployeeService {
         return employeeRepository.findAll();
     }
 
-    // 更新（追加）を行なう
+ // 更新（追加）を行なう
     @Transactional
     public ErrorKinds update(String code, UserDetail userDetail) {
      // 自分を削除しようとした場合はエラーメッセージを表示
