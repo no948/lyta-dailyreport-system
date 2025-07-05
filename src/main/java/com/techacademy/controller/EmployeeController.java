@@ -1,5 +1,7 @@
 package com.techacademy.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,9 +36,9 @@ public class EmployeeController {
     // 従業員一覧画面
     @GetMapping
     public String list(Model model) {
-
+        List<Employee> employees = employeeService.findAll();
         model.addAttribute("listSize", employeeService.findAll().size());
-        model.addAttribute("employeeList", employeeService.findAll());
+        model.addAttribute("employeeList", employees);
 
         return "employees/list";
     }
