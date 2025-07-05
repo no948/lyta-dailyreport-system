@@ -127,7 +127,8 @@ public class EmployeeController {
 
         // 入力チェック
         if (res.hasErrors()) {
-            return update(employee.getCode(), model);
+            model.addAttribute("employee", employee);
+            return "employees/edit";
         }
 
         // 論理削除を行った従業員番号を指定すると例外となるためtry~catchで対応
@@ -150,5 +151,3 @@ public class EmployeeController {
     }
 
 }
-
-
