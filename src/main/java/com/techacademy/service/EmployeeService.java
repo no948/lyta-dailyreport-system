@@ -71,18 +71,28 @@ public class EmployeeService {
         return employeeRepository.findAll();
     }
 
- // 更新（追加）を行なう
+    // 従業員更新
     @Transactional
-    public ErrorKinds update(String code, UserDetail userDetail) {
-     // 自分を削除しようとした場合はエラーメッセージを表示
-        if (code.equals(userDetail.getEmployee().getCode())) {
-            return ErrorKinds.LOGINCHECK_ERROR;
-        }
-        Employee employee = findByCode(code);
-        LocalDateTime now = LocalDateTime.now();
-        employee.setUpdatedAt(now);
-        employee.setDeleteFlg(true);
+    public ErrorKinds update(Employee employee) {
+        // DBから既存データを取得
+        Employee dbEmployee = findByCode(employee.getCode());
 
+        // パスワード空文字なら既存のパスワードを使う
+        if (employee.getPassword() == null || employee.getPassword().isEmpty()) {
+            employee.setPassword(dbEmployee.getPassword());
+        } else {
+            // パスワードチェック（空白でないときのみ）
+            ErrorKinds result = employeePasswordCheck(employee);
+            if (ErrorKinds.CHECK_OK != result) {
+                return result;
+            }
+        }
+
+        employee.setCreatedAt(dbEmployee.getCreatedAt()); // 元の作成日を保持
+        employee.setUpdatedAt(LocalDateTime.now());
+        employee.setDeleteFlg(false);
+
+        employeeRepository.save(employee);
         return ErrorKinds.SUCCESS;
     }
 
