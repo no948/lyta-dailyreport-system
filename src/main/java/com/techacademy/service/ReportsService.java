@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.techacademy.constants.ErrorKinds;
+import com.techacademy.entity.Employee;
 import com.techacademy.entity.Reports;
 import com.techacademy.repository.ReportsRepository;
 
@@ -49,9 +50,23 @@ public class ReportsService {
         report.setUpdatedAt(LocalDateTime.now());
         report.setDeleteFlg(true);
         reportsRepository.save(report);
-
         return ErrorKinds.SUCCESS;
     }
+
+        /* 削除対象の従業員に紐づいている日報情報の削除：ここから */
+        // 削除対象の従業員（employee）に紐づいている、日報のリスト（reportList）を取得
+    public List<Reports> findByEmployee(Employee employee) {
+        return reportsRepository.findByEmployee(employee);
+    }
+    //  日報（report）のIDを指定して、日報情報を削除
+    @Transactional
+    public void delete(Integer id) {
+        Reports report = findById(id);
+        report.setUpdatedAt(LocalDateTime.now());
+        report.setDeleteFlg(true);
+        reportsRepository.save(report);
+    }
+        /* 削除対象の従業員に紐づいている日報情報の削除：ここまで */
 
     // 日報一覧表示処理
     public List<Reports> findAll() {
