@@ -25,7 +25,7 @@
                                         <label class="form-label" for="reportDate">日付</label>
                                         <p class="mb-1"></p>
                                         <div class="col-md-7">
-                                            <input class="form-control" type="date" th:field="*{reportDate}" id="reportDate">
+                                            <input class="form-control" type="date" name="reportDate" th:value="${#temporals.format(report.reportDate, 'yyyy-MM-dd')}" >
                                             <div class="text-danger mt-1" th:if="${#fields.hasErrors('reportDate')}" th:errors="*{reportDate}"></div>
                                             <div class="text-danger mt-1" th:if="${reportDateError != null}" th:text="${reportDateError}"></div>
                                         </div>
@@ -48,7 +48,7 @@
                                          <label class="form-label" for="content">内容</label>
                                         <p class="mb-1"></p>
                                         <div class="col-md-7">
-                                            <input class="form-control" type="text" th:field="*{content}" th:errorclass="err" id="content"></input>
+                                            <textarea class="form-control" rows="10" th:field="*{content}" th:errorclass="err" id="content"></textarea>
                                             <div class="text-danger mt-1" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
                                         </div>
                                     </div>
