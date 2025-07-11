@@ -27,6 +27,7 @@
                                         <div class="col-md-7">
                                             <input class="form-control" type="date" th:field="*{reportDate}" id="reportDate">
                                             <div class="text-danger mt-1" th:if="${#fields.hasErrors('reportDate')}" th:errors="*{reportDate}"></div>
+                                            <div class="text-danger mt-1" th:if="${reportDateError != null}" th:text="${reportDateError}"></div>
                                         </div>
                                     </div>
                                     <div class="mb-3">
@@ -47,7 +48,7 @@
                                          <label class="form-label" for="content">内容</label>
                                         <p class="mb-1"></p>
                                         <div class="col-md-7">
-                                            <textarea class="form-control" rows="5" th:field="*{content}" th:errorclass="err" id="content"></textarea>
+                                            <input class="form-control" type="text" th:field="*{content}" th:errorclass="err" id="content"></input>
                                             <div class="text-danger mt-1" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
                                         </div>
                                     </div>

@@ -2,6 +2,7 @@ package com.techacademy.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,9 +44,9 @@ public class ReportsService {
         Reports report = findById(id);
 
         // 自分を削除しようとした場合はエラーメッセージを表示
-        if (report.getEmployee().getCode().equals(userDetail.getEmployee().getCode())) {
-            return ErrorKinds.LOGINCHECK_ERROR;
-        }
+        //if (report.getEmployee().getCode().equals(userDetail.getEmployee().getCode())) {
+        //    return ErrorKinds.LOGINCHECK_ERROR;
+       // }
 
         report.setUpdatedAt(LocalDateTime.now());
         report.setDeleteFlg(true);
@@ -72,6 +73,16 @@ public class ReportsService {
     public List<Reports> findAll() {
         return reportsRepository.findAll();
     }
+    // ログインユーザーの権限に応じて切り替えるメソッド
+    public List<Reports> findByUserAuthority(UserDetail userDetail) {
+        if (userDetail.getEmployee().getRole().toString().equals("ADMIN")) {
+            // 管理者は全件
+            return reportsRepository.findByDeleteFlgFalse();
+        } else {
+            // 一般ユーザーは自分が登録した日報のみ
+            return reportsRepository.findByEmployeeAndDeleteFlgFalse(userDetail.getEmployee());
+        }
+    }
 
     // 日報更新
     @Transactional
@@ -96,4 +107,15 @@ public class ReportsService {
         return reports;
     }
 
+    // 新規登録用の重複チェック
+    public boolean isDuplicateReport(Employee employee, LocalDate reportDate) {
+        Optional<Reports> report = reportsRepository.findByEmployeeAndReportDateAndDeleteFlgFalse(employee, reportDate);
+        return report.isPresent();
+    }
+
+    // 更新用の重複チェック（自分のレコード以外に同じ日付のものがあるか）
+    public boolean isDuplicateReportForUpdate(String employeeCode, LocalDate reportDate, Integer currentReportId) {
+        List<Reports> reports = reportsRepository.findByEmployee_CodeAndReportDateAndDeleteFlgFalse(employeeCode, reportDate);
+        return reports.stream().anyMatch(r -> !r.getId().equals(currentReportId));
+    }
 }

@@ -40,10 +40,10 @@ public class ReportsController {
 
     // 日報一覧画面
     @GetMapping
-    public String list(Model model) {
-        List<Reports> reports = reportsService.findAll();
-        model.addAttribute("listSize", reports.size());
+    public String list(Model model, @AuthenticationPrincipal UserDetail userDetail) {
+        List<Reports> reports = reportsService.findByUserAuthority(userDetail);
         model.addAttribute("reportsList", reports);
+        model.addAttribute("listSize", reports.size());
         return "reports/list";
     }
 
@@ -69,20 +69,26 @@ public class ReportsController {
     // 日報新規登録処理
     @PostMapping(value = "/add")
     public String add(@Validated @ModelAttribute("report") Reports report, BindingResult res, Principal principal, Model model) {
+        Employee loginUser = employeeService.findByCode(principal.getName());
 
         // 入力チェック
         if (res.hasErrors()) {
             model.addAttribute("report", report);
-            Employee loginUser = employeeService.findByCode(principal.getName());
             report.setName(loginUser.getName());
             report.setEmployeeCode(loginUser.getCode());
+            return "reports/new";
+        }
+        // 日付重複チェック
+        if (reportsService.isDuplicateReport(loginUser, report.getReportDate())) {
+            report.setName(loginUser.getName());
+            model.addAttribute("report", report);
+            model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DATECHECK_ERROR),ErrorMessage.getErrorValue(ErrorKinds.DATECHECK_ERROR));
             return "reports/new";
         }
 
         // 論理削除を行った従業員番号を指定すると例外となるためtry~catchで対応
         // (findByIdでは削除フラグがTRUEのデータが取得出来ないため)
         try {
-            Employee loginUser = employeeService.findByCode(principal.getName());
             // 氏名をセットする
             report.setName(loginUser.getName());
             report.setEmployee(loginUser);
@@ -100,7 +106,6 @@ public class ReportsController {
             model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DUPLICATE_EXCEPTION_ERROR),
                     ErrorMessage.getErrorValue(ErrorKinds.DUPLICATE_EXCEPTION_ERROR));
             model.addAttribute("report", report);
-            Employee loginUser = employeeService.findByCode(principal.getName());
             model.addAttribute("employeeName", loginUser.getName());
             report.setName(loginUser.getName());
             return "reports/new";
@@ -129,6 +134,7 @@ public class ReportsController {
     @GetMapping(value = "/{id}/update")
     public String update(@PathVariable Integer id, Model model, Principal principal) {
         Reports report = reportsService.findById(id);
+        System.out.println("reportDate = " + report.getReportDate()); //
         // 氏名が null または空ならログイン中の従業員情報から補完
         if (report.getName() == null || report.getName().isEmpty()) {
             Employee loginUser = employeeService.findByCode(principal.getName());
@@ -141,13 +147,21 @@ public class ReportsController {
     // 日報更新処理
     @PostMapping(value = "/{id}/update")
     public String update(@Validated @ModelAttribute("report") Reports report, BindingResult res, Model model, Principal principal) {
+        Employee loginUser = employeeService.findByCode(principal.getName());
 
         //入力チェック
         if (res.hasErrors()) {
              // ログイン中の従業員情報を取得して氏名をセット
-            Employee loginUser = employeeService.findByCode(principal.getName());
             report.setName(loginUser.getName());
             model.addAttribute("report", report);
+            return "reports/edit";
+        }
+        // 日付重複チェック（更新時は現在のIDと異なる場合のみエラー）
+        if (reportsService.isDuplicateReportForUpdate(loginUser.getCode(), report.getReportDate(), report.getId())) {
+            report.setName(loginUser.getName());
+            model.addAttribute("report", report);
+            model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DATECHECK_ERROR),
+                    ErrorMessage.getErrorValue(ErrorKinds.DATECHECK_ERROR));
             return "reports/edit";
         }
 
@@ -155,7 +169,6 @@ public class ReportsController {
         // (findByIdでは削除フラグがTRUEのデータが取得出来ないため)
         try {
             //ログインユーザーを取得してセットする
-            Employee loginUser = employeeService.findByCode(principal.getName());
             report.setEmployee(loginUser);
             report.setName(loginUser.getName());
             ErrorKinds result = reportsService.update(report);
